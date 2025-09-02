@@ -30,7 +30,7 @@ document.getElementById('uploadForm').addEventListener('submit', async (e) => {
     const response = await fetch('https://cosmicuploads.onrender.com/upload', { method: 'POST', body: formData });
     const result = await response.json();
     if(result.link){
-        document.getElementById('linkBox').innerHTML = `Download link: <a href="https://YOUR_BACKEND_URL${result.link}" target="_blank">${result.link}</a>`;
+        document.getElementById('linkBox').innerHTML = `Download link: <a href="https://cosmicuploads.onrender.com${result.link}" target="_blank">${result.link}</a>`;
     } else {
         document.getElementById('linkBox').innerText = 'Error uploading file';
     }
