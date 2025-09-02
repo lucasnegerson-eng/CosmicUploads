@@ -1,4 +1,4 @@
-# Cosmic Uploads Backend
+# Cosmic Uploads Backend (Render-ready)
 from flask import Flask, request, jsonify, send_file
 from cryptography.fernet import Fernet
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -37,16 +37,25 @@ def cleanup_old_files():
 scheduler.add_job(cleanup_old_files, 'interval', minutes=10)
 scheduler.start()
 
+# Root route for testing
+@app.route('/', methods=['GET'])
+def home():
+    return "Cosmic Uploads backend is running"
+
 @app.route('/upload', methods=['POST'])
 def upload_file():
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part"}), 400
     file = request.files['file']
-    if len(file.read()) > 1024**3:  # 1GB limit
+    if file.filename == '':
+        return jsonify({"error": "No file selected"}), 400
+    file_content = file.read()
+    if len(file_content) > 1024**3:  # 1GB limit
         return jsonify({"error": "File too large"}), 400
-    file.seek(0)
     file_id = str(uuid.uuid4())
     encrypted_path = os.path.join(UPLOAD_FOLDER, file_id)
     with open(encrypted_path, 'wb') as f:
-        f.write(cipher.encrypt(file.read()))
+        f.write(cipher.encrypt(file_content))
     FILES[file_id] = {'time': time.time(), 'size': os.path.getsize(encrypted_path)}
     return jsonify({"link": f"/download/{file_id}"}), 200
 
@@ -60,4 +69,6 @@ def download_file(file_id):
     return data, 200
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
